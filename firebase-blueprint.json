@@ -1,0 +1,87 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile in the Flatudex social network",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Authenticated user UID" },
+        "displayName": { "type": "string", "description": "Display nickname" },
+        "photoUrl": { "type": "string", "description": "Avatar URL" },
+        "bio": { "type": "string", "description": "User bio" },
+        "submissionCount": { "type": "integer", "description": "Count of submissions" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server creation timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server update timestamp" }
+      },
+      "required": ["userId", "displayName"]
+    },
+    "FartSubmission": {
+      "title": "FartSubmission",
+      "description": "Quantitative and qualitative fart submission",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Author UID" },
+        "authorName": { "type": "string", "description": "Author display name" },
+        "authorPhoto": { "type": "string", "description": "Author photo" },
+        "soundProfile": {
+          "type": "object",
+          "description": "Quantitative and qualitative acoustic metrics"
+        },
+        "smellProfile": {
+          "type": "object",
+          "description": "Quantitative and qualitative olfactory metrics"
+        },
+        "context": {
+          "type": "object",
+          "description": "Dietary and environmental context"
+        },
+        "aiAnalysis": {
+          "type": "object",
+          "description": "AI taxonomy classification and health indicators"
+        },
+        "agreeCount": { "type": "integer", "description": "Community agreement votes" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server creation timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server update timestamp" }
+      },
+      "required": ["userId", "authorName", "soundProfile", "smellProfile"]
+    },
+    "Taxon": {
+      "title": "Taxon",
+      "description": "Definitive taxonomy branch or species entry in the global taxonomy",
+      "type": "object",
+      "properties": {
+        "scientificName": { "type": "string", "description": "Latin binomial name" },
+        "commonName": { "type": "string", "description": "Vernacular name" },
+        "phylum": { "type": "string", "description": "Taxonomic phylum" },
+        "flatusClass": { "type": "string", "description": "Taxonomic class" },
+        "flatusOrder": { "type": "string", "description": "Taxonomic order" },
+        "family": { "type": "string", "description": "Taxonomic family" },
+        "genus": { "type": "string", "description": "Taxonomic genus" },
+        "species": { "type": "string", "description": "Taxonomic species" },
+        "rarity": { "type": "string", "description": "Taxonomic rarity tier" },
+        "acousticSignature": { "type": "string", "description": "Acoustic signature description" },
+        "olfactorySignature": { "type": "string", "description": "Olfactory profile description" },
+        "description": { "type": "string", "description": "Taxon overview" },
+        "contributorCount": { "type": "integer", "description": "Community contributors count" },
+        "verifiedByAi": { "type": "boolean", "description": "AI validated taxon" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Update timestamp" }
+      },
+      "required": ["scientificName", "commonName", "genus", "species"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User profiles"
+    },
+    "/submissions/{submissionId}": {
+      "schema": { "$ref": "#/entities/FartSubmission" },
+      "description": "Global feed of community fart submissions"
+    },
+    "/taxa/{taxonId}": {
+      "schema": { "$ref": "#/entities/Taxon" },
+      "description": "Definitive global taxonomy catalog"
+    }
+  }
+}

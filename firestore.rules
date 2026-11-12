@@ -1,0 +1,90 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null && request.auth.uid != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidTimestamp(val) {
+      return val is timestamp && val <= request.time;
+    }
+
+    // --- User Profiles ---
+    function isValidUserProfile(data) {
+      return data.userId is string && data.userId == request.auth.uid &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 60 &&
+             (!('photoUrl' in data) || (data.photoUrl is string && data.photoUrl.size() <= 500)) &&
+             (!('bio' in data) || (data.bio is string && data.bio.size() <= 300)) &&
+             (!('submissionCount' in data) || data.submissionCount is int) &&
+             (!('createdAt' in data) || isValidTimestamp(data.createdAt)) &&
+             (!('updatedAt' in data) || isValidTimestamp(data.updatedAt));
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId) && isValidUserProfile(request.resource.data);
+      allow update: if isOwner(userId) && isValidUserProfile(request.resource.data);
+      allow delete: if isOwner(userId);
+    }
+
+    // --- Fart Submissions ---
+    function isValidSubmission(data) {
+      return data.userId is string && data.userId == request.auth.uid &&
+             data.authorName is string && data.authorName.size() >= 1 && data.authorName.size() <= 60 &&
+             data.soundProfile is map &&
+             data.smellProfile is map &&
+             (!('context' in data) || data.context is map) &&
+             (!('aiAnalysis' in data) || data.aiAnalysis is map) &&
+             (!('agreeCount' in data) || data.agreeCount is int) &&
+             (!('createdAt' in data) || isValidTimestamp(data.createdAt)) &&
+             (!('updatedAt' in data) || isValidTimestamp(data.updatedAt));
+    }
+
+    match /submissions/{submissionId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidSubmission(request.resource.data);
+      // Owner can update, or other authenticated users can vote (increment agreeCount)
+      allow update: if isAuthenticated() && (
+        (isOwner(resource.data.userId) && isValidSubmission(request.resource.data)) ||
+        (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['agreeCount', 'updatedAt']) &&
+          request.resource.data.agreeCount is int &&
+          (!('updatedAt' in request.resource.data) || isValidTimestamp(request.resource.data.updatedAt))
+        )
+      );
+      allow delete: if isAuthenticated() && isOwner(resource.data.userId);
+    }
+
+    // --- Global Taxonomy ---
+    function isValidTaxon(data) {
+      return data.scientificName is string && data.scientificName.size() >= 2 && data.scientificName.size() <= 100 &&
+             data.commonName is string && data.commonName.size() >= 2 && data.commonName.size() <= 100 &&
+             (!('phylum' in data) || data.phylum is string) &&
+             (!('flatusClass' in data) || data.flatusClass is string) &&
+             (!('flatusOrder' in data) || data.flatusOrder is string) &&
+             (!('family' in data) || data.family is string) &&
+             (!('genus' in data) || data.genus is string) &&
+             (!('species' in data) || data.species is string) &&
+             (!('rarity' in data) || data.rarity is string) &&
+             (!('acousticSignature' in data) || data.acousticSignature is string) &&
+             (!('olfactorySignature' in data) || data.olfactorySignature is string) &&
+             (!('description' in data) || data.description is string) &&
+             (!('contributorCount' in data) || data.contributorCount is int) &&
+             (!('verifiedByAi' in data) || data.verifiedByAi is bool) &&
+             (!('createdAt' in data) || isValidTimestamp(data.createdAt)) &&
+             (!('updatedAt' in data) || isValidTimestamp(data.updatedAt));
+    }
+
+    match /taxa/{taxonId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidTaxon(request.resource.data);
+      allow update: if isAuthenticated() && isValidTaxon(request.resource.data);
+      allow delete: if false; // Community taxonomy is curated and immutable to ordinary deletes
+    }
+  }
+}

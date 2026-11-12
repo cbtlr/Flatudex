@@ -1,0 +1,6 @@
+{
+  "name": "Flatudex",
+  "description": "Collaborative global taxonomy for sound and scent profiles with AI classification and personalized dietary health insights.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
